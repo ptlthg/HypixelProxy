@@ -1,0 +1,14 @@
+services:
+    hypixel-proxy:
+        image: ghcr.io/ptlthg/hypixelproxy:latest
+        restart: unless-stopped
+        environment:
+            HYPIXEL_API_KEY: ${HYPIXEL_API_KEY:?HYPIXEL_API_KEY is required}
+            AUTH_CONFIG_PATH: /run/secrets/contributors.toml
+            FORWARDED_FOR_HEADER: ${FORWARDED_FOR_HEADER:-}
+            UPSTREAM_TIMEOUT_MS: ${UPSTREAM_TIMEOUT_MS:-30000}
+            UPSTREAM_USER_AGENT: ${UPSTREAM_USER_AGENT:-}
+        volumes:
+            - ./contributors.toml:/run/secrets/contributors.toml:ro
+        expose:
+            - "3000"
