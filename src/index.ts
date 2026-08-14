@@ -25,6 +25,15 @@ const FORWARDED_HEADERS = [
 	'Range',
 	'User-Agent',
 ];
+const PUBLIC_ENDPOINTS = new Set([
+	'/v2/skyblock/news',
+	'/v2/skyblock/auctions',
+	'/v2/skyblock/auctions_ended',
+	'/v2/skyblock/bazaar',
+	'/v2/skyblock/firesales',
+]);
+const isPublicEndpoint = (path: string) =>
+	path.startsWith('/v2/resources/') || PUBLIC_ENDPOINTS.has(path);
 
 const fail = (status: number, cause: string, headers?: HeadersInit) =>
 	Response.json({ success: false, cause }, { status, headers });
@@ -86,6 +95,7 @@ export function createApp(
 		if (c.req.path === '/healthz') return next();
 		if (c.req.method !== 'GET' && c.req.method !== 'HEAD')
 			return fail(405, 'Method not allowed', { Allow: 'GET, HEAD' });
+		if (isPublicEndpoint(c.req.path)) return next();
 
 		const contributor = config.contributors.get(
 			c.req.header('API-Key') ?? c.req.query('key') ?? '',
@@ -136,7 +146,7 @@ export function createApp(
 		const headers = Object.fromEntries(
 			FORWARDED_HEADERS.map((name) => [name, c.req.header(name)]).filter(([, value]) => value),
 		) as Record<string, string>;
-		headers['API-Key'] = config.apiKey;
+		if (!isPublicEndpoint(c.req.path)) headers['API-Key'] = config.apiKey;
 		if (config.userAgent) headers['User-Agent'] = config.userAgent;
 
 		const timeout = AbortSignal.timeout(config.timeoutMs);

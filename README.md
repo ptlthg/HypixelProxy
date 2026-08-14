@@ -29,6 +29,9 @@ HYPIXEL_API_URL="https://yourdomain.example" # The domain you have for this
 HYPIXEL_API_KEY="your-unique-secret-key-that-doesnt-match-hypixel-here"
 ```
 
+Endpoints that don't require an API key on Hypixel also work without one through the proxy. Those
+requests are passed through without either a contributor key or the server-side Hypixel key.
+
 ## Configuration
 
 Copy `contributors.example.toml` to the ignored `contributors.toml` file:

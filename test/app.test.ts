@@ -71,6 +71,25 @@ describe('application', () => {
 		assert.equal(denied.status, 403);
 	});
 
+	it('proxies public Hypixel endpoints without either API key', async () => {
+		let received: IncomingMessage | undefined;
+		const origin = await upstream((request, response) => {
+			received = request;
+			response.end('public');
+		});
+
+		try {
+			const app = createApp(config(), origin.url);
+			const response = await app.request('/v2/resources/skyblock/items');
+
+			assert.equal(response.status, 200);
+			assert.equal(await response.text(), 'public');
+			assert.equal(received?.headers['api-key'], undefined);
+		} finally {
+			await close(origin.server);
+		}
+	});
+
 	it('proxies the path and query while replacing and filtering credentials', async () => {
 		let received: IncomingMessage | undefined;
 		const origin = await upstream((request, response) => {
@@ -120,7 +139,7 @@ describe('application', () => {
 			const second = await request();
 
 			assert.equal(first.status, 200);
-			assert.equal(first.headers.get('X-Proxy-RateLimit-Remaining'), '0');
+			assert.equal(first.headers.get('X-RateLimit-Remaining'), '0');
 			assert.equal(second.status, 429);
 			assert.ok(second.headers.has('Retry-After'));
 			assert.equal(calls, 1);
